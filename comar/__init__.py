@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2006-2009, TUBITAK/UEKAE
@@ -54,7 +54,7 @@ class Call:
                 yield str(package)
 
     def call(self, *args, **kwargs):
-        self.async_ = kwargs.get("async", None)
+        self.async_ = kwargs.get("async_", None)
         self.quiet = kwargs.get("quiet", False)
         self.timeout = kwargs.get("timeout", 120)
         if self.async_ and self.quiet:
@@ -143,7 +143,11 @@ class Link:
         self.use_agent = ("DISPLAY" in os.environ)
 
         if not socket:
-            self.bus = dbus.SystemBus()
+            try:
+                self.bus = dbus.SystemBus()
+            except dbus.DBusException as e:
+                print(f"Dbus connection failed: {e}")
+                raise
         else:
             self.bus = dbus.bus.BusConnection(address_or_type="unix:path=%s" % socket)
 
@@ -162,7 +166,7 @@ class Link:
                 obj = self.bus.get_object(self.address, '/', introspect=False)
                 obj.setLocale(code, dbus_interface=self.interface)
         except dbus.DBusException as exception:
-            pass
+            logging.error(f"DBus Error: {exception}")
 
     def cancel(self, method="*"):
         try:
